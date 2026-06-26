@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sénégal ExploMap - Tableau de Bord Cartographique</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  
+  <!-- Leaflet Marker Cluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <i data-lucide="map-pin" class="logo-icon"></i>
+        <h1>Sénégal <span>ExploMap</span></h1>
+      </div>
+      <div class="header-controls">
+        <button id="geo-btn" class="btn btn-secondary tooltip" data-tooltip="Ma position">
+          <i data-lucide="locate"></i>
+          <span>Géolocalisation</span>
+        </button>
+        <button id="theme-toggle" class="btn btn-icon tooltip" data-tooltip="Changer le thème">
+          <i data-lucide="sun" class="icon-sun"></i>
+          <i data-lucide="moon" class="icon-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="app-main">
+      <!-- Sidebar / Filters -->
+      <aside class="sidebar">
+        <!-- Search and Autocomplete -->
+        <div class="search-box card">
+          <h3><i data-lucide="search"></i> Recherche</h3>
+          <div class="input-wrapper">
+            <input type="text" id="search-input" placeholder="Rechercher un lieu, une ville..." autocomplete="off">
+            <button id="search-clear-btn" class="clear-btn hidden"><i data-lucide="x"></i></button>
+            <div id="autocomplete-list" class="autocomplete-items hidden"></div>
+          </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="filter-box card">
+          <h3><i data-lucide="sliders-horizontal"></i> Catégories</h3>
+          <div class="filter-list">
+            <button class="filter-pill active" data-category="all">
+              <span class="pill-dot all"></span>
+              Tous <span class="badge" id="badge-all">0</span>
+            </button>
+            <button class="filter-pill" data-category="culture">
+              <span class="pill-dot culture"></span>
+              Culture &amp; Histoire <span class="badge" id="badge-culture">0</span>
+            </button>
+            <button class="filter-pill" data-category="nature">
+              <span class="pill-dot nature"></span>
+              Nature &amp; Parcs <span class="badge" id="badge-nature">0</span>
+            </button>
+            <button class="filter-pill" data-category="plage">
+              <span class="pill-dot plage"></span>
+              Plages &amp; Loisirs <span class="badge" id="badge-plage">0</span>
+            </button>
+            <button class="filter-pill" data-category="hotel_resto">
+              <span class="pill-dot hotel_resto"></span>
+              Hôtels &amp; Restos <span class="badge" id="badge-hotel_resto">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick actions / Export -->
+        <div class="export-box card">
+          <h3><i data-lucide="download"></i> Actions &amp; Exports</h3>
+          <div class="export-actions">
+            <button id="export-csv" class="btn btn-primary-outline">
+              <i data-lucide="file-spreadsheet"></i>
+              Exporter en CSV
+            </button>
+            <button id="export-json" class="btn btn-primary-outline">
+              <i data-lucide="braces"></i>
+              Exporter en JSON
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Map & Data Section -->
+      <section class="map-section">
+        <div id="map-container" class="card">
+          <div id="map"></div>
+          
+          <!-- Floating Status Info -->
+          <div class="map-overlay">
+            <div class="overlay-item">
+              <i data-lucide="compass"></i>
+              <span id="map-status">Prêt</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Statistics Dashboard -->
+      <section class="stats-section">
+        <!-- KPIs -->
+        <div class="kpi-container">
+          <div class="kpi-card card">
+            <div class="kpi-icon culture-kpi"><i data-lucide="map-pin"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Sites Affichés</span>
+              <span class="kpi-value" id="kpi-total">0</span>
+            </div>
+          </div>
+          <div class="kpi-card card">
+            <div class="kpi-icon nature-kpi"><i data-lucide="star"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Note Moyenne</span>
+              <span class="kpi-value" id="kpi-rating">0.0</span>
+            </div>
+          </div>
+          <div class="kpi-card card">
+            <div class="kpi-icon plage-kpi"><i data-lucide="map"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Villes Couvertes</span>
+              <span class="kpi-value" id="kpi-cities">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Graphical Stats -->
+        <div class="charts-container">
+          <div class="chart-card card">
+            <h4>Répartition par Catégorie</h4>
+            <div class="chart-wrapper">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card card">
+            <h4>Sites par Ville</h4>
+            <div class="chart-wrapper">
+              <canvas id="cityChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>&copy; 2026 Sénégal ExploMap. Conçu avec passion.</p>
+      <div class="footer-links">
+        <a href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer">Leaflet</a>
+        <span>•</span>
+        <a href="https://www.chartjs.org/" target="_blank" rel="noopener noreferrer">Chart.js</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Leaflet Marker Cluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Data and Application Logic -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
